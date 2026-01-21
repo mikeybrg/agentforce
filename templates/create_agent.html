@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Agent - AgentForge</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">AgentForge</span>
+            </a>
+            <div class="nav-links">
+                <a href="/browse" class="nav-link">Browse Agents</a>
+                <a href="/create" class="nav-link active">Create Agent</a>
+                <div class="user-menu">
+                    <span class="username">{{ user.username }}</span>
+                    <a href="/api/logout" class="nav-link logout">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="create-page">
+        <div class="container">
+            <div class="create-header">
+                <h1>Create a New Agent</h1>
+                <p>Build your own AI agent and share it with the community</p>
+            </div>
+
+            <form action="/api/agents" method="POST" class="create-form" id="create-form">
+                {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h2>Basic Information</h2>
+
+                    <div class="form-group">
+                        <label for="name">Agent Name *</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            maxlength="200"
+                            placeholder="e.g., Code Reviewer, Writing Assistant"
+                            value="{{ form_data.name if form_data else '' }}"
+                        >
+                        <span class="form-hint">Give your agent a clear, descriptive name</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if form_data and form_data.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="icon">Icon</label>
+                            <div class="icon-picker">
+                                <input type="text" id="icon" name="icon" value="{{ form_data.icon if form_data else '🤖' }}" maxlength="4" class="icon-input">
+                                <div class="icon-options">
+                                    <button type="button" class="icon-option" data-icon="🤖">🤖</button>
+                                    <button type="button" class="icon-option" data-icon="🧠">🧠</button>
+                                    <button type="button" class="icon-option" data-icon="💻">💻</button>
+                                    <button type="button" class="icon-option" data-icon="📝">📝</button>
+                                    <button type="button" class="icon-option" data-icon="🎨">🎨</button>
+                                    <button type="button" class="icon-option" data-icon="📊">📊</button>
+                                    <button type="button" class="icon-option" data-icon="🔍">🔍</button>
+                                    <button type="button" class="icon-option" data-icon="⚡">⚡</button>
+                                    <button type="button" class="icon-option" data-icon="📚">📚</button>
+                                    <button type="button" class="icon-option" data-icon="✉️">✉️</button>
+                                    <button type="button" class="icon-option" data-icon="🎯">🎯</button>
+                                    <button type="button" class="icon-option" data-icon="🛠️">🛠️</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            required
+                            rows="3"
+                            maxlength="500"
+                            placeholder="Describe what your agent does and how it can help users..."
+                        >{{ form_data.description if form_data else '' }}</textarea>
+                        <span class="form-hint"><span id="desc-count">0</span>/500 characters</span>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Agent Configuration</h2>
+
+                    <div class="form-group">
+                        <label for="system_prompt">System Prompt *</label>
+                        <textarea
+                            id="system_prompt"
+                            name="system_prompt"
+                            required
+                            rows="8"
+                            placeholder="You are a helpful assistant that specializes in..."
+                        >{{ form_data.system_prompt if form_data else '' }}</textarea>
+                        <span class="form-hint">
+                            This is the instruction that defines your agent's personality, expertise, and behavior.
+                            Be specific about what the agent should do and how it should respond.
+                        </span>
+                    </div>
+
+                    <div class="prompt-tips">
+                        <h3>Tips for a great system prompt:</h3>
+                        <ul>
+                            <li>Start with "You are..." to define the agent's role</li>
+                            <li>Be specific about the agent's expertise and limitations</li>
+                            <li>Include example behaviors or response styles</li>
+                            <li>Mention any specific formats the agent should use</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Agent Workflow</h2>
+                    <p class="section-description">Choose a workflow pattern that defines how your agent reasons and acts. Uses ReAct (Reasoning + Acting) pattern.</p>
+
+                    <div class="workflow-grid">
+                        <label class="workflow-option">
+                            <input type="radio" name="workflow" value="custom" checked>
+                            <span class="workflow-card">
+                                <span class="workflow-icon">🤖</span>
+                                <span class="workflow-info">
+                                    <strong>Standard Agent</strong>
+                                    <small>General-purpose agent that uses tools as needed</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="workflow-option">
+                            <input type="radio" name="workflow" value="research">
+                            <span class="workflow-card">
+                                <span class="workflow-icon">🔬</span>
+                                <span class="workflow-info">
+                                    <strong>Research Assistant</strong>
+                                    <small>Search → Analyze → Synthesize → Cite sources</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="workflow-option">
+                            <input type="radio" name="workflow" value="code_assistant">
+                            <span class="workflow-card">
+                                <span class="workflow-icon">👨‍💻</span>
+                                <span class="workflow-info">
+                                    <strong>Code Assistant</strong>
+                                    <small>Understand → Plan → Code → Test → Explain</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="workflow-option">
+                            <input type="radio" name="workflow" value="data_analyst">
+                            <span class="workflow-card">
+                                <span class="workflow-icon">📊</span>
+                                <span class="workflow-info">
+                                    <strong>Data Analyst</strong>
+                                    <small>Collect → Clean → Analyze → Visualize → Recommend</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="workflow-option">
+                            <input type="radio" name="workflow" value="task_executor">
+                            <span class="workflow-card">
+                                <span class="workflow-icon">✅</span>
+                                <span class="workflow-info">
+                                    <strong>Task Executor</strong>
+                                    <small>Decompose → Prioritize → Execute → Verify → Report</small>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="workflow-note">
+                        <strong>💡 ReAct Pattern:</strong> Your agent will think step-by-step, decide which tools to use, observe results, and iterate until it has a complete answer.
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Agent Capabilities</h2>
+                    <p class="section-description">Give your agent real powers. These capabilities let it take action and solve problems - not just chat.</p>
+
+                    <div class="tools-grid">
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="web_search">
+                            <span class="tool-card">
+                                <span class="tool-icon">🔍</span>
+                                <span class="tool-info">
+                                    <strong>Web Search</strong>
+                                    <small>Find current news, prices, facts, and real-time data from the web</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="run_python">
+                            <span class="tool-card">
+                                <span class="tool-icon">💻</span>
+                                <span class="tool-info">
+                                    <strong>Code Execution</strong>
+                                    <small>Write and run Python code to analyze data, process files, automate tasks</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="calculator">
+                            <span class="tool-card">
+                                <span class="tool-icon">🔢</span>
+                                <span class="tool-info">
+                                    <strong>Calculator</strong>
+                                    <small>Perform math: algebra, trig, statistics, financial calculations</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="analyze_text">
+                            <span class="tool-card">
+                                <span class="tool-icon">📄</span>
+                                <span class="tool-info">
+                                    <strong>Text Analysis</strong>
+                                    <small>Extract emails, URLs, numbers, word counts from documents</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="http_request">
+                            <span class="tool-card">
+                                <span class="tool-icon">🌐</span>
+                                <span class="tool-info">
+                                    <strong>API Access</strong>
+                                    <small>Fetch live data from APIs: GitHub, weather, crypto prices, etc.</small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="tool-option">
+                            <input type="checkbox" name="tools" value="multi_step">
+                            <span class="tool-card">
+                                <span class="tool-icon">🧠</span>
+                                <span class="tool-info">
+                                    <strong>Multi-step Reasoning</strong>
+                                    <small>Break complex problems into steps, chain tools together</small>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="tools-note">
+                        <strong>⚡ Real Agent Power:</strong> With these capabilities enabled, your agent can search the web for current info, run calculations, fetch live API data, and chain multiple actions to solve complex problems.
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Pricing</h2>
+
+                    <div class="form-group">
+                        <div class="pricing-toggle">
+                            <label class="toggle-option">
+                                <input type="radio" name="is_free" value="true" checked>
+                                <span class="toggle-label">
+                                    <span class="toggle-icon">🆓</span>
+                                    <span class="toggle-text">
+                                        <strong>Free</strong>
+                                        <small>Anyone can use this agent</small>
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="is_free" value="false">
+                                <span class="toggle-label">
+                                    <span class="toggle-icon">💰</span>
+                                    <span class="toggle-text">
+                                        <strong>Paid</strong>
+                                        <small>Set a price per use</small>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group price-group" id="price-group" style="display: none;">
+                        <label for="price">Price per use ($)</label>
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value="0"
+                            placeholder="0.00"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/browse" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-large" id="submit-btn">
+                        Create Agent
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🔮</span>
+                    <span class="logo-text">AgentForge</span>
+                </div>
+                <p class="footer-text">The marketplace for AI agents. Built with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Icon picker
+        document.querySelectorAll('.icon-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('icon').value = btn.dataset.icon;
+            });
+        });
+
+        // Description character counter
+        const descTextarea = document.getElementById('description');
+        const descCount = document.getElementById('desc-count');
+        if (descTextarea && descCount) {
+            descTextarea.addEventListener('input', () => {
+                descCount.textContent = descTextarea.value.length;
+            });
+            descCount.textContent = descTextarea.value.length;
+        }
+
+        // Pricing toggle
+        document.querySelectorAll('input[name="is_free"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const priceGroup = document.getElementById('price-group');
+                priceGroup.style.display = radio.value === 'false' ? 'block' : 'none';
+            });
+        });
+
+        // Form submission with loading state
+        const form = document.getElementById('create-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const originalBtnText = submitBtn.textContent;
+
+        form.addEventListener('submit', (e) => {
+            console.log('Form submitting...');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+        });
+
+        // Debug: log if button is clicked
+        submitBtn.addEventListener('click', (e) => {
+            console.log('Button clicked');
+            console.log('Form valid:', form.checkValidity());
+            if (!form.checkValidity()) {
+                console.log('Form validation failed - reporting...');
+                form.reportValidity();
+            }
+        });
+
+        // Scroll to error if present
+        const errorMsg = document.querySelector('.error-message');
+        if (errorMsg) {
+            errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>

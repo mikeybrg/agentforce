@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ agent.name }} - AgentForge</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">AgentForge</span>
+            </a>
+            <div class="nav-links">
+                <a href="/browse" class="nav-link">Browse Agents</a>
+                {% if user %}
+                    <a href="/create" class="nav-link">Create Agent</a>
+                    <div class="user-menu">
+                        <span class="username">{{ user.username }}</span>
+                        <a href="/api/logout" class="nav-link logout">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="agent-detail-page">
+        <div class="container">
+            <!-- Back Link -->
+            <a href="/browse" class="back-link">← Back to Browse</a>
+
+            <!-- Agent Header -->
+            <div class="agent-header">
+                <div class="agent-header-icon">{{ agent.icon }}</div>
+                <div class="agent-header-info">
+                    <h1>{{ agent.name }}</h1>
+                    <p class="agent-creator-info">
+                        Created by <strong>{{ agent.creator.username if agent.creator else 'Unknown' }}</strong>
+                        • {{ agent.category }}
+                    </p>
+                    <div class="agent-stats-bar">
+                        <span class="stat">
+                            <span class="stat-icon">👁️</span>
+                            {{ agent.uses_count }} uses
+                        </span>
+                        <span class="stat">
+                            <span class="stat-icon">❤️</span>
+                            <span id="likes-count">{{ agent.likes_count }}</span> likes
+                        </span>
+                        {% if agent.is_free %}
+                        <span class="stat free-badge">Free</span>
+                        {% else %}
+                        <span class="stat price-badge">${{ "%.2f"|format(agent.price) }}</span>
+                        {% endif %}
+                    </div>
+                    {% set tools = agent.config.get('tools', []) if agent.config else [] %}
+                    {% if tools %}
+                    <div class="agent-tools">
+                        {% if 'web_search' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">🔍</span> Web Search</span>
+                        {% endif %}
+                        {% if 'run_python' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">💻</span> Code Execution</span>
+                        {% endif %}
+                        {% if 'calculator' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">🔢</span> Calculator</span>
+                        {% endif %}
+                        {% if 'analyze_text' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">📄</span> Text Analysis</span>
+                        {% endif %}
+                        {% if 'http_request' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">🌐</span> API Access</span>
+                        {% endif %}
+                        {% if 'multi_step' in tools %}
+                        <span class="tool-badge"><span class="tool-badge-icon">🧠</span> Multi-step Reasoning</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="agent-header-actions">
+                    {% if user %}
+                    <button id="like-btn" class="btn {% if user_liked %}btn-liked{% else %}btn-secondary{% endif %}" data-agent-id="{{ agent.id }}">
+                        <span class="like-icon">{% if user_liked %}❤️{% else %}🤍{% endif %}</span>
+                        <span id="like-text">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+                    </button>
+                    {% else %}
+                    <a href="/login?next=/agent/{{ agent.id }}" class="btn btn-secondary">
+                        🤍 Like
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Agent Content -->
+            <div class="agent-content">
+                <div class="agent-main">
+                    <!-- Description -->
+                    <section class="content-section">
+                        <h2>About this Agent</h2>
+                        <p class="agent-full-description">{{ agent.description }}</p>
+                    </section>
+
+                    <!-- Demo Chat -->
+                    <section class="content-section">
+                        <h2>Try it out</h2>
+                        <div class="chat-container" id="chat-container">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="chat-message assistant">
+                                    <div class="message-avatar">{{ agent.icon }}</div>
+                                    <div class="message-content">
+                                        <p>Hello! I'm <strong>{{ agent.name }}</strong>. {{ agent.description[:100] }}...</p>
+                                        <p>How can I help you today?</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-container">
+                                <input
+                                    type="text"
+                                    id="chat-input"
+                                    class="chat-input"
+                                    placeholder="Type your message..."
+                                    autocomplete="off"
+                                >
+                                <button id="send-btn" class="btn btn-primary">Send</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="agent-sidebar">
+                    <div class="sidebar-section">
+                        <h3>Details</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Category</span>
+                            <span class="detail-value">{{ agent.category }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created</span>
+                            <span class="detail-value">{{ agent.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Uses</span>
+                            <span class="detail-value">{{ agent.uses_count }}</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3>Share</h3>
+                        <button class="btn btn-secondary btn-full" onclick="copyLink()">
+                            📋 Copy Link
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🔮</span>
+                    <span class="logo-text">AgentForge</span>
+                </div>
+                <p class="footer-text">The marketplace for AI agents. Built with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        const agentId = {{ agent.id }};
+        const conversationHistory = [];
+
+        // Chat functionality
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function addMessage(content, role, actions = []) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${role}`;
+
+            if (role === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="message-content">
+                        <p>${escapeHtml(content)}</p>
+                    </div>
+                    <div class="message-avatar">👤</div>
+                `;
+            } else {
+                // Build actions HTML if there are any
+                let actionsHtml = '';
+                if (actions && actions.length > 0) {
+                    actionsHtml = '<div class="agent-actions">';
+                    for (const action of actions) {
+                        const inputStr = JSON.stringify(action.input, null, 2);
+                        const outputStr = typeof action.output === 'object'
+                            ? JSON.stringify(action.output, null, 2)
+                            : action.output;
+                        actionsHtml += `
+                            <div class="agent-action">
+                                <div class="agent-action-header">
+                                    <span>${action.tool_icon || '🔧'}</span>
+                                    <span>${action.tool_name || action.tool}</span>
+                                </div>
+                                <div class="agent-action-content">
+                                    <details>
+                                        <summary>Input: ${escapeHtml(Object.values(action.input)[0] || '').substring(0, 50)}...</summary>
+                                        <pre>${escapeHtml(inputStr)}</pre>
+                                    </details>
+                                    <details open>
+                                        <summary>Result</summary>
+                                        <pre>${escapeHtml(outputStr).substring(0, 500)}${outputStr.length > 500 ? '...' : ''}</pre>
+                                    </details>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    actionsHtml += '</div>';
+                }
+
+                msgDiv.innerHTML = `
+                    <div class="message-avatar">{{ agent.icon }}</div>
+                    <div class="message-content">
+                        ${actionsHtml}
+                        ${marked ? marked.parse(content) : '<p>' + escapeHtml(content) + '</p>'}
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') text = String(text);
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            conversationHistory.push({ role: 'user', content: message });
+            chatInput.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Thinking...';
+
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message assistant loading';
+            loadingDiv.innerHTML = `
+                <div class="message-avatar">{{ agent.icon }}</div>
+                <div class="message-content">
+                    <p class="typing-indicator">Thinking<span>.</span><span>.</span><span>.</span></p>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch(`/api/agents/${agentId}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_history: conversationHistory.slice(-10)
+                    })
+                });
+
+                const data = await response.json();
+                loadingDiv.remove();
+
+                // Add message with actions
+                addMessage(data.response, 'assistant', data.actions || []);
+                conversationHistory.push({ role: 'assistant', content: data.response });
+
+            } catch (error) {
+                loadingDiv.remove();
+                addMessage('Sorry, something went wrong. Please try again.', 'assistant');
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+            chatInput.focus();
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Like functionality
+        const likeBtn = document.getElementById('like-btn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', async () => {
+                try {
+                    const response = await fetch(`/api/agents/${agentId}/like`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    document.getElementById('likes-count').textContent = data.likes_count;
+                    const likeIcon = likeBtn.querySelector('.like-icon');
+                    const likeText = document.getElementById('like-text');
+
+                    if (data.liked) {
+                        likeBtn.classList.add('btn-liked');
+                        likeBtn.classList.remove('btn-secondary');
+                        likeIcon.textContent = '❤️';
+                        likeText.textContent = 'Liked';
+                    } else {
+                        likeBtn.classList.remove('btn-liked');
+                        likeBtn.classList.add('btn-secondary');
+                        likeIcon.textContent = '🤍';
+                        likeText.textContent = 'Like';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        // Copy link
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard!');
+        }
+    </script>
+    <!-- Markdown parser for formatting responses -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</body>
+</html>

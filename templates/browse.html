@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Agents - AgentForge</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">AgentForge</span>
+            </a>
+            <div class="nav-links">
+                <a href="/browse" class="nav-link active">Browse Agents</a>
+                {% if user %}
+                    <a href="/create" class="nav-link">Create Agent</a>
+                    <div class="user-menu">
+                        <span class="username">{{ user.username }}</span>
+                        <a href="/api/logout" class="nav-link logout">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="browse-page">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Browse Agents</h1>
+                <p>Discover AI agents for every task</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <form class="search-form" action="/browse" method="get">
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Search agents..."
+                        class="search-input"
+                        value="{{ current_search or '' }}"
+                    >
+                    {% if current_category %}
+                    <input type="hidden" name="category" value="{{ current_category }}">
+                    {% endif %}
+                    <input type="hidden" name="sort" value="{{ current_sort }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select id="category-filter" class="filter-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>
+                            {{ category }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Sort by:</label>
+                    <select id="sort-filter" class="filter-select">
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest</option>
+                        <option value="likes" {% if current_sort == 'likes' %}selected{% endif %}>Most Liked</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="results-info">
+                <span>{{ agents|length }} agent{% if agents|length != 1 %}s{% endif %} found</span>
+                {% if current_category %}
+                <a href="/browse?sort={{ current_sort }}{% if current_search %}&search={{ current_search }}{% endif %}" class="clear-filter">
+                    Clear category filter ×
+                </a>
+                {% endif %}
+                {% if current_search %}
+                <a href="/browse?sort={{ current_sort }}{% if current_category %}&category={{ current_category }}{% endif %}" class="clear-filter">
+                    Clear search ×
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Agents Grid -->
+            {% if agents %}
+            <div class="agents-grid browse-grid">
+                {% for agent in agents %}
+                <a href="/agent/{{ agent.id }}" class="agent-card">
+                    <div class="agent-icon">{{ agent.icon }}</div>
+                    <div class="agent-info">
+                        <h3 class="agent-name">{{ agent.name }}</h3>
+                        <p class="agent-description">{{ agent.description[:120] }}{% if agent.description|length > 120 %}...{% endif %}</p>
+                        <div class="agent-meta">
+                            <span class="agent-category">{{ agent.category }}</span>
+                            <span class="agent-stats">
+                                <span class="uses">{{ agent.uses_count }} uses</span>
+                                <span class="likes">❤️ {{ agent.likes_count }}</span>
+                            </span>
+                        </div>
+                        <div class="agent-creator">
+                            by {{ agent.creator.username if agent.creator else 'Unknown' }}
+                        </div>
+                    </div>
+                    {% if agent.is_free %}
+                    <span class="agent-badge free">Free</span>
+                    {% else %}
+                    <span class="agent-badge paid">${{ "%.2f"|format(agent.price) }}</span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <h3>No agents found</h3>
+                <p>Try adjusting your search or filters</p>
+                <a href="/browse" class="btn btn-primary">Clear all filters</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🔮</span>
+                    <span class="logo-text">AgentForge</span>
+                </div>
+                <p class="footer-text">The marketplace for AI agents. Built with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Filter change handlers
+        document.getElementById('category-filter').addEventListener('change', function() {
+            const params = new URLSearchParams(window.location.search);
+            if (this.value) {
+                params.set('category', this.value);
+            } else {
+                params.delete('category');
+            }
+            window.location.href = '/browse?' + params.toString();
+        });
+
+        document.getElementById('sort-filter').addEventListener('change', function() {
+            const params = new URLSearchParams(window.location.search);
+            params.set('sort', this.value);
+            window.location.href = '/browse?' + params.toString();
+        });
+    </script>
+</body>
+</html>

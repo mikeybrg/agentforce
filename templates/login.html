@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AgentForge</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">AgentForge</span>
+            </a>
+            <div class="nav-links">
+                <a href="/browse" class="nav-link">Browse Agents</a>
+                <a href="/login" class="nav-link active">Login</a>
+                <a href="/signup" class="btn btn-primary">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>Welcome Back</h1>
+                <p>Log in to access your agents and creations</p>
+            </div>
+
+            <form action="/api/login" method="POST" class="auth-form">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        value="{{ email or '' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        placeholder="Your password"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Log In</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/signup">Sign up</a></p>
+            </div>
+
+            <div class="demo-credentials">
+                <p><strong>Demo Account:</strong></p>
+                <p>Email: demo@agentforge.com</p>
+                <p>Password: demo123</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🔮</span>
+                    <span class="logo-text">AgentForge</span>
+                </div>
+                <p class="footer-text">The marketplace for AI agents. Built with ❤️</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

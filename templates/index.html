@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentForge - AI Agent Marketplace</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">AgentForge</span>
+            </a>
+            <div class="nav-links">
+                <a href="/browse" class="nav-link">Browse Agents</a>
+                {% if user %}
+                    <a href="/create" class="nav-link">Create Agent</a>
+                    <div class="user-menu">
+                        <span class="username">{{ user.username }}</span>
+                        <a href="/api/logout" class="nav-link logout">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Discover & Create<br>AI Agents</h1>
+            <p class="hero-subtitle">
+                Explore a marketplace of powerful AI agents built by the community.
+                Find the perfect agent for your task or create your own.
+            </p>
+            <div class="hero-actions">
+                <a href="/browse" class="btn btn-primary btn-large">Browse Agents</a>
+                <a href="/create" class="btn btn-secondary btn-large">Create Your Own</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">{{ featured_agents|length * 12 }}+</span>
+                    <span class="stat-label">AI Agents</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ categories|length }}</span>
+                    <span class="stat-label">Categories</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">10K+</span>
+                    <span class="stat-label">Users</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-agents">
+                <div class="floating-agent" style="--delay: 0s">🤖</div>
+                <div class="floating-agent" style="--delay: 0.5s">🧠</div>
+                <div class="floating-agent" style="--delay: 1s">⚡</div>
+                <div class="floating-agent" style="--delay: 1.5s">🎨</div>
+                <div class="floating-agent" style="--delay: 2s">📊</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <h2 class="section-title">Browse by Category</h2>
+            <div class="categories-grid">
+                {% for category in categories %}
+                <a href="/browse?category={{ category }}" class="category-card">
+                    <span class="category-icon">
+                        {% if category == "Coding" %}💻
+                        {% elif category == "Creative" %}🎨
+                        {% elif category == "Business" %}💼
+                        {% elif category == "Education" %}📚
+                        {% elif category == "Analysis" %}📊
+                        {% elif category == "Productivity" %}⚡
+                        {% elif category == "Entertainment" %}🎮
+                        {% elif category == "Research" %}🔬
+                        {% else %}🤖{% endif %}
+                    </span>
+                    <span class="category-name">{{ category }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Agents Section -->
+    <section class="featured-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Featured Agents</h2>
+                <a href="/browse?sort=likes" class="view-all">View All →</a>
+            </div>
+            <div class="agents-grid">
+                {% for agent in featured_agents %}
+                <a href="/agent/{{ agent.id }}" class="agent-card">
+                    <div class="agent-icon">{{ agent.icon }}</div>
+                    <div class="agent-info">
+                        <h3 class="agent-name">{{ agent.name }}</h3>
+                        <p class="agent-description">{{ agent.description[:100] }}{% if agent.description|length > 100 %}...{% endif %}</p>
+                        <div class="agent-meta">
+                            <span class="agent-category">{{ agent.category }}</span>
+                            <span class="agent-stats">
+                                <span class="uses">{{ agent.uses_count }} uses</span>
+                                <span class="likes">❤️ {{ agent.likes_count }}</span>
+                            </span>
+                        </div>
+                    </div>
+                    {% if agent.is_free %}
+                    <span class="agent-badge free">Free</span>
+                    {% else %}
+                    <span class="agent-badge paid">${{ "%.2f"|format(agent.price) }}</span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Browse</h3>
+                    <p>Explore our collection of AI agents created by the community</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Try</h3>
+                    <p>Test agents instantly with our built-in demo interface</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Create</h3>
+                    <p>Build your own agents and share them with the world</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🔮</span>
+                    <span class="logo-text">AgentForge</span>
+                </div>
+                <p class="footer-text">The marketplace for AI agents. Built with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
