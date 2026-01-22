@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from database import engine, get_db, Base
 from models import User, Agent, AgentUse, AgentLike
@@ -27,7 +27,7 @@ templates = Jinja2Templates(directory="templates")
 
 # Pydantic models for API
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: str
     username: str
     password: str
 
@@ -47,9 +47,14 @@ class AgentCreate(BaseModel):
     price: float = 0.0
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
 class AgentChat(BaseModel):
     message: str
-    conversation_history: List[dict] = []
+    conversation_history: list = []
 
 
 # Helper to get current user from cookie
